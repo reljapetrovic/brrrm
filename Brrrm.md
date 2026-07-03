@@ -1,0 +1,3 @@
+Create a web page that simulates tractor, excavator, buldozer, concrete mixer, car, and other vehicles behaviour on the cellphone. It should react to all the sensors on the cellphone to map to the vehicle behaviour/action, incorporating sound effects and visual changes. It should be very basic, 8bit 90s look, just be responsive and fun for kids to play. It should be in the birds eye or sideways perspective. Start with only one vehice, allowing options to expand to new types.
+Take a look at Zig Sim for phone sensor manipulation.
+Summarize your understanding and ask questions and give valuable suggestions.
