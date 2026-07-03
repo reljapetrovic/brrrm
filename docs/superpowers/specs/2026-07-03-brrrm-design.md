@@ -1,7 +1,7 @@
 # Brrrm — Design Spec
 
 **Date:** 2026-07-03
-**Status:** Approved pending user review
+**Status:** Shipped v1 — live at https://reljapetrovic.github.io/brrrm/
 **Brief:** [Brrrm.md](../../../Brrrm.md)
 
 ## Overview
