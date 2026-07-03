@@ -25,6 +25,8 @@ const BODY = compileSprite([
   '................',
 ]);
 
+export const icon = BODY; // used by tools/make-icons.html
+
 export const tractor = {
   name: 'tractor',
   perspective: 'top',

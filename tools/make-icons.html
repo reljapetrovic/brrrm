@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Brrrm icon generator</title>
+<p>Right-click each image → “Save Image As…” → save into <code>icons/</code> with the shown name.</p>
+<script type="module">
+import { icon } from '../src/vehicles/tractor.js';
+
+for (const size of [192, 512]) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  g.fillStyle = '#6daa2c';
+  g.fillRect(0, 0, size, size);
+  g.imageSmoothingEnabled = false;
+  const s = Math.floor((size * 0.75) / 16);
+  g.drawImage(icon, (size - 16 * s) / 2, (size - 16 * s) / 2, 16 * s, 16 * s);
+
+  const img = new Image();
+  img.src = c.toDataURL('image/png');
+  img.style.width = '160px';
+  img.style.margin = '8px';
+  const label = document.createElement('p');
+  label.textContent = `icon-${size}.png`;
+  document.body.append(img, label);
+}
+</script>

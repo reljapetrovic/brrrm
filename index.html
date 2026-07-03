@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#140c1c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
 <title>Brrrm!</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -40,5 +43,8 @@
 <button id="mute" class="hud">🔊</button>
 <button id="mic" class="hud off">🎤</button>
 <script type="module" src="src/main.js"></script>
+<script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
 </body>
 </html>
