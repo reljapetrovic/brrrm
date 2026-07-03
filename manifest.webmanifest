@@ -3,6 +3,7 @@
   "short_name": "Brrrm",
   "start_url": ".",
   "display": "fullscreen",
+  "orientation": "portrait",
   "background_color": "#140c1c",
   "theme_color": "#140c1c",
   "icons": [

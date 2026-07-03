@@ -79,16 +79,26 @@ export function createSensorBus() {
     },
 
     async enableMic() {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ac = new AudioContext();
-      const src = ac.createMediaStreamSource(stream);
-      const analyser = ac.createAnalyser();
-      analyser.fftSize = 256;
-      src.connect(analyser);
-      mic = { analyser, data: new Uint8Array(analyser.frequencyBinCount) };
+      const ac = new AudioContext(); // created inside the tap, before the permission dialog
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const src = ac.createMediaStreamSource(stream);
+        const analyser = ac.createAnalyser();
+        analyser.fftSize = 256;
+        src.connect(analyser);
+        mic = { stream, ac, analyser, data: new Uint8Array(analyser.frequencyBinCount) };
+      } catch (err) {
+        ac.close();
+        throw err;
+      }
     },
 
-    disableMic() { mic = null; },
+    disableMic() {
+      if (!mic) return;
+      mic.stream.getTracks().forEach((t) => t.stop());
+      mic.ac.close();
+      mic = null;
+    },
     get micEnabled() { return !!mic; },
 
     poll(dt) {

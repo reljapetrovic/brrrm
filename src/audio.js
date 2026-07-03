@@ -11,6 +11,7 @@ export function createAudioEngine() {
     init() { // must run inside a user gesture
       if (ac) return;
       ac = new AudioContext();
+      ac.resume();
       master = ac.createGain();
       const limiter = ac.createDynamicsCompressor();
       limiter.threshold.value = -12;
@@ -24,6 +25,10 @@ export function createAudioEngine() {
       localStorage.setItem('brrrm-muted', muted ? '1' : '0');
       if (master) master.gain.value = muted ? 0 : 0.6;
       return muted;
+    },
+
+    resume() { // belt-and-braces: iOS may suspend the context outside a gesture
+      if (ac && ac.state === 'suspended') ac.resume();
     },
 
     async loadProfile(soundProfile) {

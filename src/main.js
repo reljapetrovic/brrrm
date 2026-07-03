@@ -21,8 +21,8 @@ let running = false;
 let vibeTimer = 0;
 
 startBtn.addEventListener('click', async () => {
-  await bus.requestMotion();  // iOS permission prompt — must be in this tap
-  audio.init();               // AudioContext unlock — same tap
+  audio.init();               // AudioContext unlock — synchronously first, in this tap
+  await bus.requestMotion();  // iOS permission prompt — same tap
   await audio.loadProfile(vehicle.soundProfile);
   audio.startEngine();
   try { await navigator.wakeLock?.request('screen'); } catch {}
@@ -39,7 +39,8 @@ startBtn.addEventListener('click', async () => {
   micBtn.style.display = 'flex';
   updateMuteIcon();
   running = true;
-});
+  window.addEventListener('pointerdown', () => audio.resume());
+}, { once: true });
 
 muteBtn.addEventListener('click', () => {
   audio.toggleMuted();
