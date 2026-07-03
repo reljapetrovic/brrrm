@@ -1,58 +1,108 @@
-// TEMPORARY demo boot — replaced by the real game loop in a later task.
-import { createRenderer, compileSprite } from './renderer.js';
+import { createRenderer } from './renderer.js';
 import { createSensorBus } from './sensors.js';
 import { createAudioEngine } from './audio.js';
+import { createWorld } from './world.js';
+import { vehicles } from './vehicles/index.js';
 
-const renderer = createRenderer(document.getElementById('game'));
+const canvas = document.getElementById('game');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('start');
+const muteBtn = document.getElementById('mute');
+const micBtn = document.getElementById('mic');
+
+const renderer = createRenderer(canvas);
 const bus = createSensorBus();
 const audio = createAudioEngine();
+const world = createWorld();
+const vehicle = vehicles[0];
+renderer.camera.mode = vehicle.perspective === 'side' ? 'side' : 'top';
 
-document.getElementById('start').addEventListener('click', () => {
-  audio.init();
+let running = false;
+let vibeTimer = 0;
+
+startBtn.addEventListener('click', async () => {
+  await bus.requestMotion();  // iOS permission prompt — must be in this tap
+  audio.init();               // AudioContext unlock — same tap
+  await audio.loadProfile(vehicle.soundProfile);
   audio.startEngine();
-  document.getElementById('overlay').style.display = 'none';
-  bus.attachTouch(document.getElementById('game'));
+  try { await navigator.wakeLock?.request('screen'); } catch {}
+  try { await document.documentElement.requestFullscreen?.(); } catch {}
+  setTimeout(() => bus.calibrate(), 300); // let the grip settle, then set neutral
+
+  vehicle.reset();
+  world.seed(0, 0);
+  bus.attachTouch(canvas);
   bus.attachKeyboardShim();
+
+  overlay.style.display = 'none';
+  muteBtn.style.display = 'flex';
+  micBtn.style.display = 'flex';
+  updateMuteIcon();
+  running = true;
 });
 
-// Demo keys: H horn, J splat, K burst, L squawk, P plop (Space = shake → backfire)
-window.addEventListener('keydown', (e) => {
-  const map = { h: 'horn', j: 'splat', k: 'burst', l: 'squawk', p: 'plop' };
-  if (map[e.key]) audio.play(map[e.key]);
+muteBtn.addEventListener('click', () => {
+  audio.toggleMuted();
+  updateMuteIcon();
 });
 
-const smiley = compileSprite([
-  '..eeee..',
-  '.eeeeee.',
-  'ee0ee0ee',
-  'eeeeeeee',
-  'e0eeee0e',
-  'ee0000ee',
-  '.eeeeee.',
-  '..eeee..',
-]);
+function updateMuteIcon() {
+  muteBtn.textContent = audio.muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('off', audio.muted);
+}
 
-const pos = { x: 0, y: 0 };
-let speed = 0, flash = 0, last = performance.now();
+micBtn.addEventListener('click', async () => {
+  if (bus.micEnabled) {
+    bus.disableMic();
+    micBtn.classList.add('off');
+    return;
+  }
+  try { // mic permission prompts only here, never at start
+    await bus.enableMic();
+    micBtn.classList.remove('off');
+  } catch {}
+});
 
+let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  if (!running) return;
 
   const input = bus.poll(dt);
-  pos.x += input.tilt.x * 60 * dt;
-  pos.y -= input.tilt.y * 60 * dt;
-  speed = Math.hypot(input.tilt.x, input.tilt.y);
-  audio.setEngineIntensity(0.15 + speed * 0.85);
-  if (input.shake) { flash = 0.2; audio.play('backfire'); }
-  flash = Math.max(0, flash - dt);
 
-  renderer.follow(pos.x, pos.y);
-  renderer.clear(flash > 0 ? 6 : 5);
-  for (let ty = -20; ty < 20; ty++) for (let tx = -20; tx < 20; tx++) {
-    if ((tx + ty) % 2 === 0) renderer.rect(tx * 16, ty * 16, 16, 16, 11);
+  // Taps: on the tractor = horn; on the ground = drop something to drive over.
+  for (const tap of input.taps) {
+    const w = renderer.screenToWorld(tap.px, tap.py);
+    if (vehicle.isHit(w.x, w.y)) {
+      audio.play('horn');
+    } else {
+      world.spawnProp(Math.random() < 0.5 ? 'bale' : 'puddle', w.x, w.y);
+      audio.play('plop');
+    }
   }
-  renderer.sprite(smiley, pos.x, pos.y);
+
+  const events = [
+    ...vehicle.update(input, world, dt),
+    ...world.update(dt, vehicle.state),
+  ];
+  for (const e of events) audio.play(e.type);
+
+  const rpm = vehicle.rpm(input);
+  audio.setEngineIntensity(rpm);
+
+  // Android rumble: short pulse per chug, faster with rpm. No-op on iOS.
+  vibeTimer -= dt;
+  if (vibeTimer <= 0 && navigator.vibrate) {
+    navigator.vibrate(Math.round(10 + rpm * 20));
+    vibeTimer = 0.35 - rpm * 0.2;
+  }
+
+  renderer.follow(vehicle.state.x, vehicle.state.y);
+  renderer.clear(5);
+  world.draw(renderer);
+  vehicle.draw(renderer);
+  world.drawParticles(renderer);
 }
 requestAnimationFrame(frame);
