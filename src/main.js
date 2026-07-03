@@ -1,12 +1,25 @@
 // TEMPORARY demo boot — replaced by the real game loop in a later task.
 import { createRenderer, compileSprite } from './renderer.js';
 import { createSensorBus } from './sensors.js';
+import { createAudioEngine } from './audio.js';
 
 const renderer = createRenderer(document.getElementById('game'));
 const bus = createSensorBus();
-document.getElementById('overlay').style.display = 'none'; // demo only
-bus.attachTouch(document.getElementById('game'));
-bus.attachKeyboardShim();
+const audio = createAudioEngine();
+
+document.getElementById('start').addEventListener('click', () => {
+  audio.init();
+  audio.startEngine();
+  document.getElementById('overlay').style.display = 'none';
+  bus.attachTouch(document.getElementById('game'));
+  bus.attachKeyboardShim();
+});
+
+// Demo keys: H horn, J splat, K burst, L squawk, P plop (Space = shake → backfire)
+window.addEventListener('keydown', (e) => {
+  const map = { h: 'horn', j: 'splat', k: 'burst', l: 'squawk', p: 'plop' };
+  if (map[e.key]) audio.play(map[e.key]);
+});
 
 const smiley = compileSprite([
   '..eeee..',
@@ -20,7 +33,7 @@ const smiley = compileSprite([
 ]);
 
 const pos = { x: 0, y: 0 };
-let flash = 0, last = performance.now();
+let speed = 0, flash = 0, last = performance.now();
 
 function frame(now) {
   requestAnimationFrame(frame);
@@ -30,9 +43,10 @@ function frame(now) {
   const input = bus.poll(dt);
   pos.x += input.tilt.x * 60 * dt;
   pos.y -= input.tilt.y * 60 * dt;
-  if (input.shake) flash = 0.2;
+  speed = Math.hypot(input.tilt.x, input.tilt.y);
+  audio.setEngineIntensity(0.15 + speed * 0.85);
+  if (input.shake) { flash = 0.2; audio.play('backfire'); }
   flash = Math.max(0, flash - dt);
-  for (const tap of input.taps) console.log('tap', renderer.screenToWorld(tap.px, tap.py));
 
   renderer.follow(pos.x, pos.y);
   renderer.clear(flash > 0 ? 6 : 5);
