@@ -12,14 +12,11 @@ around an endless farm field; every input produces an immediate, exaggerated
 audiovisual reaction. It is a toy, not a game: no score, no failure, no text, no menus
 during play.
 
-Version 1 ships one vehicle (tractor, top-down perspective) on an architecture where
-each additional vehicle (excavator, bulldozer, concrete mixer, car) is a single new
-definition file, in either top-down or side-on perspective.
+Version 1 ships one vehicle (tractor, top-down perspective) on an architecture where each additional vehicle (excavator, bulldozer, concrete mixer, car) is a single new definition file, in either top-down or side-on perspective.
 
 ### Goals
 
-- Fun for mixed ages: toddler-simple cause-and-effect baseline; older kids find depth
-  through sensor combos (J-turns, backfire drifts, bale slaloms).
+- Fun for mixed ages: toddler-simple cause-and-effect baseline; older kids find depth  through sensor combos (J-turns, backfire drifts, bale slaloms).
 - Works on both iOS and Android phones, served over HTTPS.
 - 8-bit look and sound: low-res pixel art, procedurally synthesized chiptune audio.
 - Installable and offline-capable (PWA): home-screen icon, fullscreen, plays in the car.
@@ -27,8 +24,7 @@ definition file, in either top-down or side-on perspective.
 
 ### Non-goals (v1)
 
-- More than one vehicle, vehicle-picker UI, side-view content (the camera mode exists
-  but is unexercised), day/night or seasons, any backend, any analytics.
+- More than one vehicle, vehicle-picker UI, side-view content (the camera mode exists but is unexercised), day/night or seasons, any backend, any analytics.
 
 ## The experience
 
