@@ -144,7 +144,9 @@ output never clips into harshness.
 - **Mic:** strictly opt-in via its button; denied or absent means the feature is
   quietly off.
 - **Vibration:** absent on iOS; skipped silently.
-- **Orientation:** portrait-first, works in landscape; tilt math derives from the
+- **Orientation:** portrait-first; the installed PWA locks to portrait (device-frame
+  motion axes swap in landscape — screen-angle remap is post-v1). In a browser tab,
+  landscape still works via touch-drag steering; tilt math derives from the
   calibrated neutral, so grip angle doesn't matter.
 - **Sensor silence:** the sensor bus watches for DeviceMotion going quiet (some
   Android browsers stop emitting) and falls back to touch steering instead of
