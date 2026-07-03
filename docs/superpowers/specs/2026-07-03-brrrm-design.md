@@ -37,6 +37,10 @@ button. That single tap does all the invisible adult work:
 4. **Calibrates neutral tilt** to however the phone is held at that moment, so the
    kid's natural grip is "level".
 
+The start screen also shows five emoji instruction rows (📱 TILT TO DRIVE, 🫨 SHAKE
+IT!, …) and a three-way tractor-size picker — a whole-world zoom (virtual view width
+96/64/40 px, default 64) remembered in `localStorage['brrrm-view']`.
+
 Then play begins: a top-down pixel tractor centered on screen in an endless scrolling
 farm field (grass, dirt patches, mud puddles, hay bales, occasional chickens).
 

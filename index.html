@@ -15,11 +15,18 @@
   #game { position:fixed; inset:0; width:100%; height:100%;
           image-rendering:pixelated; }
   #overlay { position:fixed; inset:0; display:flex; flex-direction:column;
-             align-items:center; justify-content:center; gap:12vmin;
+             align-items:center; justify-content:center; gap:5vmin;
              background:#140c1c; z-index:10;
              font-family:"Courier New",monospace; }
-  #title { color:#deeed6; font-size:14vmin; font-weight:bold; letter-spacing:0.05em;
+  #title { color:#deeed6; font-size:12vmin; font-weight:bold; letter-spacing:0.05em;
            text-shadow:1.5vmin 1.5vmin 0 #d04648; }
+  #instructions { color:#deeed6; font-size:4vmin; font-weight:bold;
+                  line-height:2; text-align:left; }
+  #sizes { display:flex; gap:4vmin; align-items:center; }
+  .sizeBtn { width:16vmin; height:16vmin; background:#14212c; cursor:pointer;
+             border:0.6vmin solid #757161;
+             display:flex; align-items:center; justify-content:center; }
+  .sizeBtn.sel { border-color:#dad45e; background:#442434; }
   #start { font-family:inherit; font-size:6vmin; font-weight:bold; padding:4vmin 8vmin;
            color:#140c1c; background:#d04648; border:1vmin solid #deeed6;
            box-shadow:0 2vmin 0 #442434; cursor:pointer;
@@ -38,6 +45,18 @@
 <canvas id="game"></canvas>
 <div id="overlay">
   <div id="title">BRRRM!</div>
+  <div id="instructions">
+    <div>📱 TILT TO DRIVE</div>
+    <div>🫨 SHAKE IT!</div>
+    <div>👆🚜 BEEP BEEP</div>
+    <div>👆🌱 DROP A SURPRISE</div>
+    <div>🎤 YELL BRRRM!</div>
+  </div>
+  <div id="sizes">
+    <button class="sizeBtn" data-view="96" style="font-size:5vmin">🚜</button>
+    <button class="sizeBtn" data-view="64" style="font-size:8vmin">🚜</button>
+    <button class="sizeBtn" data-view="40" style="font-size:11vmin">🚜</button>
+  </div>
   <button id="start">START ENGINE</button>
 </div>
 <button id="mute" class="hud">🔊</button>

@@ -20,6 +20,19 @@ renderer.camera.mode = vehicle.perspective === 'side' ? 'side' : 'top';
 let running = false;
 let vibeTimer = 0;
 
+// Tractor-size picker: zooms the whole world; remembered across launches.
+const sizeBtns = [...document.querySelectorAll('.sizeBtn')];
+const savedView = parseInt(localStorage.getItem('brrrm-view'), 10) || 64;
+renderer.setView(savedView);
+for (const b of sizeBtns) {
+  b.classList.toggle('sel', parseInt(b.dataset.view, 10) === savedView);
+  b.addEventListener('click', () => {
+    localStorage.setItem('brrrm-view', b.dataset.view);
+    renderer.setView(parseInt(b.dataset.view, 10));
+    for (const o of sizeBtns) o.classList.toggle('sel', o === b);
+  });
+}
+
 startBtn.addEventListener('click', async () => {
   audio.init();               // AudioContext unlock — synchronously first, in this tap
   await bus.requestMotion();  // iOS permission prompt — same tap

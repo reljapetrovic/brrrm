@@ -26,11 +26,17 @@ export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const r = {
     canvas, ctx, W: 160, H: 240, scale: 1,
+    view: 64, // virtual width in world px — smaller = more zoomed in
     camera: { x: 0, y: 0, mode: 'top' }, // 'top' scrolls x+y; 'side' locks y
+
+    setView(w) {
+      this.view = w;
+      this.resize();
+    },
 
     resize() {
       const dw = canvas.clientWidth, dh = canvas.clientHeight;
-      this.scale = Math.max(2, Math.floor(dw / 160));
+      this.scale = Math.max(2, Math.floor(dw / this.view));
       this.W = Math.ceil(dw / this.scale);
       this.H = Math.ceil(dh / this.scale);
       canvas.width = this.W;
