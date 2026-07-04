@@ -33,6 +33,17 @@ for (const b of sizeBtns) {
   });
 }
 
+// Toy view picker (top-down vs side); remembered across launches.
+const toyBtns = [...document.querySelectorAll('.toyBtn')];
+const savedToyView = localStorage.getItem('brrrm-toyview') || 'top';
+for (const b of toyBtns) {
+  b.classList.toggle('sel', b.dataset.toyview === savedToyView);
+  b.addEventListener('click', () => {
+    localStorage.setItem('brrrm-toyview', b.dataset.toyview);
+    for (const o of toyBtns) o.classList.toggle('sel', o === b);
+  });
+}
+
 // START: quick tap → toy mode; ~2 s long-press → field mode.
 let launched = false, holdStart = 0, holdRAF = 0;
 

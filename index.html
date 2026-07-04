@@ -27,6 +27,10 @@
              border:0.6vmin solid #757161;
              display:flex; align-items:center; justify-content:center; }
   .sizeBtn.sel { border-color:#dad45e; background:#442434; }
+  #toyviews { display:flex; gap:4vmin; }
+  .toyBtn { font-family:inherit; font-size:4vmin; font-weight:bold; padding:2vmin 4vmin;
+            color:#deeed6; background:#14212c; border:0.6vmin solid #757161; cursor:pointer; }
+  .toyBtn.sel { border-color:#dad45e; background:#442434; }
   #start { font-family:inherit; font-size:6vmin; font-weight:bold; padding:4vmin 8vmin;
            color:#140c1c; background:#d04648; border:1vmin solid #deeed6;
            box-shadow:0 2vmin 0 #442434; cursor:pointer;
@@ -53,11 +57,15 @@
 <div id="overlay">
   <div id="title">BRRRM!</div>
   <div id="instructions">
-    <div>📱 TILT TO DRIVE</div>
-    <div>🫨 SHAKE IT!</div>
-    <div>👆🚜 BEEP BEEP</div>
-    <div>👆🌱 DROP A SURPRISE</div>
+    <div>📱 PUSH ME AROUND</div>
+    <div>🫨 SHAKE ME!</div>
+    <div>👆 TAP MY PARTS</div>
+    <div>🙃 FLIP = STALL</div>
     <div>🎤 YELL BRRRM!</div>
+  </div>
+  <div id="toyviews">
+    <button class="toyBtn" data-toyview="top">⬇ TOP</button>
+    <button class="toyBtn" data-toyview="side">➡ SIDE</button>
   </div>
   <div id="sizes">
     <button class="sizeBtn" data-view="96" style="font-size:5vmin">🚜</button>
