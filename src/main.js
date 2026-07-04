@@ -79,7 +79,6 @@ async function launch(mode) {
   if (launched) return; launched = true;
   audio.init();               // AudioContext unlock — synchronously first, in this gesture
   await bus.requestMotion();  // iOS permission prompt — same gesture
-  audio.startEngine();
   try { await navigator.wakeLock?.request('screen'); } catch {}
   try { await document.documentElement.requestFullscreen?.(); } catch {}
   setTimeout(() => bus.calibrate(), 300);
@@ -87,12 +86,14 @@ async function launch(mode) {
   bus.attachKeyboardShim();
 
   if (mode === 'field') {
-    await audio.loadProfile(vehicle.soundProfile);
+    await audio.loadProfile(vehicle.soundProfile); // decode any engine sample BEFORE startEngine picks synth vs sample
+    audio.startEngine();
     vehicle.reset();
     world.seed(0, 0);
     renderer.setView(parseInt(localStorage.getItem('brrrm-view'), 10) || 64); // fresh, not the load-time value
     renderer.camera.mode = 'top';
   } else {
+    audio.startEngine(); // toy mode: synth-only, no profile to load
     scene.reset(localStorage.getItem('brrrm-toyview') || 'top');
   }
 
