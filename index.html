@@ -32,6 +32,13 @@
            box-shadow:0 2vmin 0 #442434; cursor:pointer;
            animation:pulse 1s steps(2,end) infinite; }
   #start:active { transform:translateY(1vmin); box-shadow:0 1vmin 0 #442434; }
+  #start { position:relative; }
+  #ring { position:absolute; left:50%; top:50%; width:34vmin; height:34vmin;
+          transform:translate(-50%,-50%); border-radius:50%; opacity:0;
+          pointer-events:none;
+          background:conic-gradient(#dad45e var(--p,0deg), #14212c 0);
+          -webkit-mask:radial-gradient(transparent 58%, #000 60%);
+          mask:radial-gradient(transparent 58%, #000 60%); }
   @keyframes pulse { 50% { background:#d27d2c; } }
   .hud { position:fixed; z-index:5; width:11vmin; height:11vmin; font-size:6vmin;
          background:#14212ccc; color:#deeed6; border:0.6vmin solid #deeed6;
@@ -57,7 +64,7 @@
     <button class="sizeBtn" data-view="64" style="font-size:8vmin">🚜</button>
     <button class="sizeBtn" data-view="40" style="font-size:11vmin">🚜</button>
   </div>
-  <button id="start">START ENGINE</button>
+  <button id="start"><div id="ring"></div>START ENGINE</button>
 </div>
 <button id="mute" class="hud">🔊</button>
 <button id="mic" class="hud off">🎤</button>

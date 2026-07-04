@@ -3,7 +3,7 @@ const PRECACHE = [
   '.', 'index.html', 'manifest.webmanifest',
   'src/main.js', 'src/mapping.js', 'src/sensors.js', 'src/audio.js',
   'src/renderer.js', 'src/world.js',
-  'src/vehicles/index.js', 'src/vehicles/tractor.js',
+  'src/vehicles/index.js', 'src/vehicles/tractor.js', 'src/toy.js',
   'icons/icon-192.png', 'icons/icon-512.png',
 ];
 

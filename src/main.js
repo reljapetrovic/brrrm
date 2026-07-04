@@ -2,6 +2,7 @@ import { createRenderer } from './renderer.js';
 import { createSensorBus } from './sensors.js';
 import { createAudioEngine } from './audio.js';
 import { createWorld } from './world.js';
+import { createToyScene } from './toy.js';
 import { vehicles } from './vehicles/index.js';
 
 const canvas = document.getElementById('game');
@@ -9,72 +10,99 @@ const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('start');
 const muteBtn = document.getElementById('mute');
 const micBtn = document.getElementById('mic');
+const ring = document.getElementById('ring');
 
 const renderer = createRenderer(canvas);
 const bus = createSensorBus();
 const audio = createAudioEngine();
 const world = createWorld();
+const scene = createToyScene({ renderer, audio });
 const vehicle = vehicles[0];
-renderer.camera.mode = vehicle.perspective === 'side' ? 'side' : 'top';
 
 let running = false;
 let vibeTimer = 0;
 
-// Tractor-size picker: zooms the whole world; remembered across launches.
+// Field-mode size picker (unchanged from v1; toy mode ignores it).
 const sizeBtns = [...document.querySelectorAll('.sizeBtn')];
-const savedView = parseInt(localStorage.getItem('brrrm-view'), 10) || 64;
-renderer.setView(savedView);
+const savedSize = parseInt(localStorage.getItem('brrrm-view'), 10) || 64;
 for (const b of sizeBtns) {
-  b.classList.toggle('sel', parseInt(b.dataset.view, 10) === savedView);
+  b.classList.toggle('sel', parseInt(b.dataset.view, 10) === savedSize);
   b.addEventListener('click', () => {
     localStorage.setItem('brrrm-view', b.dataset.view);
-    renderer.setView(parseInt(b.dataset.view, 10));
     for (const o of sizeBtns) o.classList.toggle('sel', o === b);
   });
 }
 
-startBtn.addEventListener('click', async () => {
-  audio.init();               // AudioContext unlock — synchronously first, in this tap
-  await bus.requestMotion();  // iOS permission prompt — same tap
-  await audio.loadProfile(vehicle.soundProfile);
+// START: quick tap → toy mode; ~2 s long-press → field mode.
+let launched = false, holdStart = 0, holdRAF = 0;
+
+function cancelHold() {
+  cancelAnimationFrame(holdRAF);
+  ring.style.opacity = '0';
+  ring.style.setProperty('--p', '0deg');
+}
+
+startBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (launched) return;
+  holdStart = performance.now();
+  ring.style.opacity = '1';
+  const tick = () => {
+    const p = Math.min(1, (performance.now() - holdStart) / 2000);
+    ring.style.setProperty('--p', (p * 360) + 'deg');
+    if (p >= 1) { cancelHold(); launch('field'); return; }
+    holdRAF = requestAnimationFrame(tick);
+  };
+  holdRAF = requestAnimationFrame(tick);
+});
+startBtn.addEventListener('pointerup', () => {
+  if (launched) return;
+  const held = performance.now() - holdStart;
+  cancelHold();
+  launch(held >= 2000 ? 'field' : 'toy');
+});
+startBtn.addEventListener('pointerleave', () => { if (!launched) cancelHold(); });
+startBtn.addEventListener('pointercancel', () => { if (!launched) cancelHold(); });
+
+async function launch(mode) {
+  if (launched) return; launched = true;
+  audio.init();               // AudioContext unlock — synchronously first, in this gesture
+  await bus.requestMotion();  // iOS permission prompt — same gesture
   audio.startEngine();
   try { await navigator.wakeLock?.request('screen'); } catch {}
   try { await document.documentElement.requestFullscreen?.(); } catch {}
-  setTimeout(() => bus.calibrate(), 300); // let the grip settle, then set neutral
-
-  vehicle.reset();
-  world.seed(0, 0);
+  setTimeout(() => bus.calibrate(), 300);
   bus.attachTouch(canvas);
   bus.attachKeyboardShim();
+
+  if (mode === 'field') {
+    await audio.loadProfile(vehicle.soundProfile);
+    vehicle.reset();
+    world.seed(0, 0);
+    renderer.setView(parseInt(localStorage.getItem('brrrm-view'), 10) || 64); // fresh, not the load-time value
+    renderer.camera.mode = 'top';
+  } else {
+    scene.reset(localStorage.getItem('brrrm-toyview') || 'top');
+  }
 
   overlay.style.display = 'none';
   muteBtn.style.display = 'flex';
   micBtn.style.display = 'flex';
   updateMuteIcon();
-  running = true;
   window.addEventListener('pointerdown', () => audio.resume());
-}, { once: true });
+  document.body.dataset.mode = mode;
+  running = true;
+}
 
-muteBtn.addEventListener('click', () => {
-  audio.toggleMuted();
-  updateMuteIcon();
-});
-
+muteBtn.addEventListener('click', () => { audio.toggleMuted(); updateMuteIcon(); });
 function updateMuteIcon() {
   muteBtn.textContent = audio.muted ? '🔇' : '🔊';
   muteBtn.classList.toggle('off', audio.muted);
 }
 
 micBtn.addEventListener('click', async () => {
-  if (bus.micEnabled) {
-    bus.disableMic();
-    micBtn.classList.add('off');
-    return;
-  }
-  try { // mic permission prompts only here, never at start
-    await bus.enableMic();
-    micBtn.classList.remove('off');
-  } catch {}
+  if (bus.micEnabled) { bus.disableMic(); micBtn.classList.add('off'); return; }
+  try { await bus.enableMic(); micBtn.classList.remove('off'); } catch {}
 });
 
 let last = performance.now();
@@ -85,38 +113,33 @@ function frame(now) {
   if (!running) return;
 
   const input = bus.poll(dt);
+  let rpm;
 
-  // Taps: on the tractor = horn; on the ground = drop something to drive over.
-  for (const tap of input.taps) {
-    const w = renderer.screenToWorld(tap.px, tap.py);
-    if (vehicle.isHit(w.x, w.y)) {
-      audio.play('horn');
-    } else {
-      world.spawnProp(Math.random() < 0.5 ? 'bale' : 'puddle', w.x, w.y);
-      audio.play('plop');
+  if (document.body.dataset.mode === 'toy') {
+    rpm = scene.update(input, dt).rpm;
+    audio.setEngineIntensity(rpm);
+    scene.draw();
+  } else {
+    for (const tap of input.taps) {
+      const w = renderer.screenToWorld(tap.px, tap.py);
+      if (vehicle.isHit(w.x, w.y)) audio.play('horn');
+      else { world.spawnProp(Math.random() < 0.5 ? 'bale' : 'puddle', w.x, w.y); audio.play('plop'); }
     }
+    const events = [...vehicle.update(input, world, dt), ...world.update(dt, vehicle.state)];
+    for (const e of events) audio.play(e.type);
+    rpm = vehicle.rpm(input);
+    audio.setEngineIntensity(rpm);
+    renderer.follow(vehicle.state.x, vehicle.state.y);
+    renderer.clear(5);
+    world.draw(renderer);
+    vehicle.draw(renderer);
+    world.drawParticles(renderer);
   }
 
-  const events = [
-    ...vehicle.update(input, world, dt),
-    ...world.update(dt, vehicle.state),
-  ];
-  for (const e of events) audio.play(e.type);
-
-  const rpm = vehicle.rpm(input);
-  audio.setEngineIntensity(rpm);
-
-  // Android rumble: short pulse per chug, faster with rpm. No-op on iOS.
   vibeTimer -= dt;
   if (vibeTimer <= 0 && navigator.vibrate) {
     navigator.vibrate(Math.round(10 + rpm * 20));
     vibeTimer = 0.35 - rpm * 0.2;
   }
-
-  renderer.follow(vehicle.state.x, vehicle.state.y);
-  renderer.clear(5);
-  world.draw(renderer);
-  vehicle.draw(renderer);
-  world.drawParticles(renderer);
 }
 requestAnimationFrame(frame);
