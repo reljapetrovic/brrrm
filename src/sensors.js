@@ -10,7 +10,7 @@ export function createSensorBus() {
   let raw = { beta: 0, gamma: 0 };  // latest orientation sample
   let neutral = null;               // captured at calibrate()
   let accelMag = 9.81;
-  let accelZ = 9.81;   // accelerationIncludingGravity.z → face-down detection
+  let ax = 0, ay = 0, az = 9.81; // accelerationIncludingGravity vector → motion energy + face-down
   let rotMag = 0;      // rotation-rate magnitude, rad/s
   let lastMotionAt = 0;
   let taps = [];
@@ -43,7 +43,7 @@ export function createSensorBus() {
       });
       window.addEventListener('devicemotion', (e) => {
         const a = e.accelerationIncludingGravity;
-        if (a && a.x !== null) { accelMag = Math.hypot(a.x, a.y, a.z); accelZ = a.z; }
+        if (a && a.x !== null) { ax = a.x; ay = a.y; az = a.z; accelMag = Math.hypot(ax, ay, az); }
         const rr = e.rotationRate; // deg/s
         if (rr && rr.alpha !== null) {
           rotMag = Math.hypot(rr.alpha || 0, rr.beta || 0, rr.gamma || 0) * Math.PI / 180;
@@ -142,10 +142,10 @@ export function createSensorBus() {
         micLevel = Math.min(1, (sum / mic.data.length) / 90);
       }
 
-      let motionEnergy = energyMeter.update(accelMag, dt);
+      let motionEnergy = energyMeter.update(ax, ay, az, dt);
       if (kb.energy) motionEnergy = Math.max(motionEnergy, kb.energy);
       let rotRate = Math.max(rotMag, kb.rot);
-      let faceDown = faceDownDetector.update(accelZ) || kb.faceDown;
+      let faceDown = faceDownDetector.update(az) || kb.faceDown;
 
       const out = { tilt, shake, taps, micLevel, motionEnergy, rotRate, faceDown };
       taps = [];

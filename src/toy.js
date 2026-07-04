@@ -6,7 +6,7 @@ import { rpmFromEnergy } from './mapping.js';
 import { icon as FIELD_TRACTOR } from './vehicles/tractor.js';
 
 const SCROLL_SPEED = 90;     // world px/s of ground scroll at rpm 1
-const REVERSE_TILT = -0.3;   // tilt.y below this → reverse
+const REVERSE_TILT = 0.3;    // tilt.y ABOVE this → reverse (tilt nose-down to go forward)
 const TWIST_THRESHOLD = 3.5; // rad/s → tyre screech
 
 export function createToyScene({ renderer, audio }) {
@@ -52,14 +52,15 @@ export function createToyScene({ renderer, audio }) {
     if (input.faceDown && !st.stalled) { st.stalled = true; audio.play('sputterStall'); }
     else if (!input.faceDown && st.stalled) { st.stalled = false; audio.play('startCough'); }
 
-    // RPM: motion energy is the main driver; forward tilt and yelling add.
+    // RPM: motion energy is the main driver; tilting nose-down (tilt.y < 0) and
+    // yelling add throttle.
     let target = 0;
     if (!st.stalled) {
-      const drive = Math.min(1, input.motionEnergy + Math.max(0, input.tilt.y) * 0.6 + input.micLevel * 0.5);
+      const drive = Math.min(1, input.motionEnergy + Math.max(0, -input.tilt.y) * 0.6 + input.micLevel * 0.5);
       target = rpmFromEnergy(drive);
     }
     st.rpm += (target - st.rpm) * Math.min(1, dt / 0.2);
-    st.dir = input.tilt.y < REVERSE_TILT ? -1 : 1;
+    st.dir = input.tilt.y > REVERSE_TILT ? -1 : 1;
 
     // Lean + spring squeak on a firm sideways tilt.
     const prev = st.lean;

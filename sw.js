@@ -1,4 +1,4 @@
-const CACHE = 'brrrm-v3'; // bump this on every deploy
+const CACHE = 'brrrm-v4'; // bump this on every deploy
 const PRECACHE = [
   '.', 'index.html', 'manifest.webmanifest',
   'src/main.js', 'src/mapping.js', 'src/sensors.js', 'src/audio.js',

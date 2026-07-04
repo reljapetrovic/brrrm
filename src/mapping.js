@@ -47,20 +47,26 @@ export function createShakeDetector() {
 
 // --- Toy-mode math (v2) ---
 
-export const ENERGY_FULL = 12;          // m/s² of jolt → energy 1.0
-const ENERGY_BASE_TAU = 0.5;            // s — baseline tracks gravity + steady tilt
+export const ENERGY_FULL = 3.5;         // m/s² of linear motion → energy 1.0
+const ENERGY_BASE_TAU = 0.5;            // s — baseline VECTOR tracks the gravity direction
 const ENERGY_ATTACK_TAU = 0.08;         // s — fast rise
 const ENERGY_RELEASE_TAU = 0.4;         // s — slow fall (survives gaps between floor bumps)
 
-// Smoothed motion energy 0..1 from the magnitude of accelerationIncludingGravity.
-// A slow baseline absorbs gravity and steady tilt; the rectified residual (jolts
-// from pushing/shaking) is envelope-followed with fast attack, slow release.
+// Motion energy 0..1 from the accelerationIncludingGravity VECTOR (ax, ay, az).
+// A slow baseline vector tracks gravity (and any steady tilt); the RESIDUAL vector
+// is the linear motion, so pushing the phone through space registers directly —
+// not attenuated in quadrature as it was when we high-passed only the scalar
+// magnitude (a horizontal push barely changes |g|). Envelope-followed: fast
+// attack, slow release.
 export function createEnergyMeter() {
-  let baseline = 9.81, energy = 0;
+  let bx = 0, by = 0, bz = 9.81, energy = 0;
   return {
-    update(magnitude, dt) {
-      baseline += (magnitude - baseline) * Math.min(1, dt / ENERGY_BASE_TAU);
-      const jolt = Math.abs(magnitude - baseline);
+    update(ax, ay, az, dt) {
+      const k = Math.min(1, dt / ENERGY_BASE_TAU);
+      bx += (ax - bx) * k;
+      by += (ay - by) * k;
+      bz += (az - bz) * k;
+      const jolt = Math.hypot(ax - bx, ay - by, az - bz);
       const target = Math.min(1, jolt / ENERGY_FULL);
       const tau = target > energy ? ENERGY_ATTACK_TAU : ENERGY_RELEASE_TAU;
       energy += (target - energy) * Math.min(1, dt / tau);
