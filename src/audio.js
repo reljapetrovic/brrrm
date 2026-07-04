@@ -146,4 +146,24 @@ const SYNTH = {
     blip(ac, out, { f0: 900, f1: 500, dur: 0.1, vol: 0.35 });
     setTimeout(() => blip(ac, out, { f0: 1100, f1: 600, dur: 0.12, vol: 0.3 }), 90);
   },
+  reverseBeep(ac, out) { blip(ac, out, { type: 'square', f0: 880, f1: 880, dur: 0.12, vol: 0.35 }); },
+  squeak(ac, out) {
+    blip(ac, out, { type: 'sine', f0: 1400, f1: 2200, dur: 0.08, vol: 0.3 });
+    setTimeout(() => blip(ac, out, { type: 'sine', f0: 2000, f1: 1200, dur: 0.08, vol: 0.25 }), 70);
+  },
+  screech(ac, out) { noise(ac, out, { dur: 0.45, vol: 0.45, filterFrom: 5000, filterTo: 2500 }); },
+  rattle(ac, out) {
+    noise(ac, out, { dur: 0.12, vol: 0.4, filterFrom: 2000, filterTo: 400 });
+    setTimeout(() => noise(ac, out, { dur: 0.1, vol: 0.35, filterFrom: 1500, filterTo: 300 }), 80);
+    setTimeout(() => noise(ac, out, { dur: 0.1, vol: 0.3, filterFrom: 1800, filterTo: 350 }), 160);
+  },
+  sputterStall(ac, out) {
+    blip(ac, out, { type: 'square', f0: 120, f1: 30, dur: 0.6, vol: 0.5 });
+    noise(ac, out, { dur: 0.6, vol: 0.25, filterFrom: 600, filterTo: 120 });
+  },
+  startCough(ac, out) {
+    noise(ac, out, { dur: 0.15, vol: 0.4, filterFrom: 800, filterTo: 200 });
+    setTimeout(() => noise(ac, out, { dur: 0.15, vol: 0.4, filterFrom: 800, filterTo: 200 }), 200);
+    setTimeout(() => blip(ac, out, { type: 'square', f0: 60, f1: 110, dur: 0.4, vol: 0.5 }), 420);
+  },
 };

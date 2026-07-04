@@ -27,11 +27,22 @@
              border:0.6vmin solid #757161;
              display:flex; align-items:center; justify-content:center; }
   .sizeBtn.sel { border-color:#dad45e; background:#442434; }
+  #toyviews { display:flex; gap:4vmin; }
+  .toyBtn { font-family:inherit; font-size:4vmin; font-weight:bold; padding:2vmin 4vmin;
+            color:#deeed6; background:#14212c; border:0.6vmin solid #757161; cursor:pointer; }
+  .toyBtn.sel { border-color:#dad45e; background:#442434; }
   #start { font-family:inherit; font-size:6vmin; font-weight:bold; padding:4vmin 8vmin;
            color:#140c1c; background:#d04648; border:1vmin solid #deeed6;
            box-shadow:0 2vmin 0 #442434; cursor:pointer;
            animation:pulse 1s steps(2,end) infinite; }
   #start:active { transform:translateY(1vmin); box-shadow:0 1vmin 0 #442434; }
+  #start { position:relative; }
+  #ring { position:absolute; left:50%; top:50%; width:34vmin; height:34vmin;
+          transform:translate(-50%,-50%); border-radius:50%; opacity:0;
+          pointer-events:none;
+          background:conic-gradient(#dad45e var(--p,0deg), #14212c 0);
+          -webkit-mask:radial-gradient(transparent 58%, #000 60%);
+          mask:radial-gradient(transparent 58%, #000 60%); }
   @keyframes pulse { 50% { background:#d27d2c; } }
   .hud { position:fixed; z-index:5; width:11vmin; height:11vmin; font-size:6vmin;
          background:#14212ccc; color:#deeed6; border:0.6vmin solid #deeed6;
@@ -46,18 +57,22 @@
 <div id="overlay">
   <div id="title">BRRRM!</div>
   <div id="instructions">
-    <div>📱 TILT TO DRIVE</div>
-    <div>🫨 SHAKE IT!</div>
-    <div>👆🚜 BEEP BEEP</div>
-    <div>👆🌱 DROP A SURPRISE</div>
+    <div>📱 PUSH ME AROUND</div>
+    <div>🫨 SHAKE ME!</div>
+    <div>👆 TAP MY PARTS</div>
+    <div>🙃 FLIP = STALL</div>
     <div>🎤 YELL BRRRM!</div>
+  </div>
+  <div id="toyviews">
+    <button class="toyBtn" data-toyview="top">⬇ TOP</button>
+    <button class="toyBtn" data-toyview="side">➡ SIDE</button>
   </div>
   <div id="sizes">
     <button class="sizeBtn" data-view="96" style="font-size:5vmin">🚜</button>
     <button class="sizeBtn" data-view="64" style="font-size:8vmin">🚜</button>
     <button class="sizeBtn" data-view="40" style="font-size:11vmin">🚜</button>
   </div>
-  <button id="start">START ENGINE</button>
+  <button id="start"><div id="ring"></div>START ENGINE</button>
 </div>
 <button id="mute" class="hud">🔊</button>
 <button id="mic" class="hud off">🎤</button>

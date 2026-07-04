@@ -1,18 +1,22 @@
 // Sensor bus: normalizes device sensors (or fallbacks) into one input state per frame.
-import { tiltFromOrientation, createShakeDetector } from './mapping.js';
+import { tiltFromOrientation, createShakeDetector, createEnergyMeter, createFaceDownDetector } from './mapping.js';
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 export function createSensorBus() {
   const shakeDetector = createShakeDetector();
+  const energyMeter = createEnergyMeter();
+  const faceDownDetector = createFaceDownDetector();
   let raw = { beta: 0, gamma: 0 };  // latest orientation sample
   let neutral = null;               // captured at calibrate()
   let accelMag = 9.81;
+  let accelZ = 9.81;   // accelerationIncludingGravity.z → face-down detection
+  let rotMag = 0;      // rotation-rate magnitude, rad/s
   let lastMotionAt = 0;
   let taps = [];
   let drag = null;                  // touch-steer fallback state
   let mic = null;                   // { analyser, data }
-  const kb = { x: 0, y: 0, shake: false };
+  const kb = { x: 0, y: 0, shake: false, energy: 0, faceDown: false, rot: 0 };
 
   const bus = {
     mode: 'touch',
@@ -39,7 +43,11 @@ export function createSensorBus() {
       });
       window.addEventListener('devicemotion', (e) => {
         const a = e.accelerationIncludingGravity;
-        if (a && a.x !== null) accelMag = Math.hypot(a.x, a.y, a.z);
+        if (a && a.x !== null) { accelMag = Math.hypot(a.x, a.y, a.z); accelZ = a.z; }
+        const rr = e.rotationRate; // deg/s
+        if (rr && rr.alpha !== null) {
+          rotMag = Math.hypot(rr.alpha || 0, rr.beta || 0, rr.gamma || 0) * Math.PI / 180;
+        }
       });
       return 'requested';
     },
@@ -73,9 +81,16 @@ export function createSensorBus() {
       };
       window.addEventListener('keydown', (e) => {
         if (e.key === ' ') kb.shake = true;
+        if (e.key === 'e' || e.key === 'E') kb.energy = 0.8;
+        if (e.key === 't' || e.key === 'T') kb.rot = 6;
+        if ((e.key === 'f' || e.key === 'F') && !e.repeat) kb.faceDown = !kb.faceDown;
         keys[e.key] = true; map();
       });
-      window.addEventListener('keyup', (e) => { keys[e.key] = false; map(); });
+      window.addEventListener('keyup', (e) => {
+        if (e.key === 'e' || e.key === 'E') kb.energy = 0;
+        if (e.key === 't' || e.key === 'T') kb.rot = 0;
+        keys[e.key] = false; map();
+      });
     },
 
     async enableMic() {
@@ -127,7 +142,12 @@ export function createSensorBus() {
         micLevel = Math.min(1, (sum / mic.data.length) / 90);
       }
 
-      const out = { tilt, shake, taps, micLevel };
+      let motionEnergy = energyMeter.update(accelMag, dt);
+      if (kb.energy) motionEnergy = Math.max(motionEnergy, kb.energy);
+      let rotRate = Math.max(rotMag, kb.rot);
+      let faceDown = faceDownDetector.update(accelZ) || kb.faceDown;
+
+      const out = { tilt, shake, taps, micLevel, motionEnergy, rotRate, faceDown };
       taps = [];
       return out;
     },

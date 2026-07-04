@@ -22,6 +22,16 @@ export function compileSprite(rows) {
   return c;
 }
 
+// Nearest-neighbour enlarge a compiled sprite by an integer factor.
+export function scaleSprite(img, n) {
+  const c = document.createElement('canvas');
+  c.width = img.width * n; c.height = img.height * n;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
+
 export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const r = {
