@@ -1,7 +1,7 @@
 # Brrrm v2 — Toy Mode Design Spec
 
 **Date:** 2026-07-04
-**Status:** Draft pending user review
+**Status:** Shipped v2 — live at https://reljapetrovic.github.io/brrrm/
 **Supersedes the default experience of:** [v1 spec](2026-07-03-brrrm-design.md) (field mode lives on behind a parent gesture)
 
 ## Overview
