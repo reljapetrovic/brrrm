@@ -122,9 +122,52 @@ export function createToyScene({ renderer, audio }) {
     }
   }
 
-  // Side view is filled in by Task 5; until then it reuses the top-down draw so
-  // choosing SIDE early still renders something valid.
-  function drawSide() { drawTop(); }
+  function drawWheel(x, y, rad) {
+    const R = renderer;
+    R.rect(x - rad, y - rad, rad * 2, rad * 2, 0);          // tyre
+    R.rect(x - rad + 1, y - rad + 1, rad * 2 - 2, rad * 2 - 2, 4); // brown inner
+    const sx = Math.round(x + Math.cos(st.wheelSpin) * (rad - 1)); // rotating spoke tip
+    const sy = Math.round(y + Math.sin(st.wheelSpin) * (rad - 1));
+    R.px(sx, sy, 15);
+    R.px(x, y, 15);
+  }
+
+  function drawSide() {
+    const R = renderer, W = R.W, H = R.H;
+    R.camera.x = 0; R.camera.y = 0;
+    R.clear(8); // sky blue
+    R.rect(W - 18, 8, 8, 8, 14); // sun
+    // Two clouds drifting slowly leftward with the scroll.
+    const cl = ((st.scroll * 0.2) % (W + 30) + (W + 30)) % (W + 30);
+    R.rect(((30 - cl) % (W + 30) + (W + 30)) % (W + 30) - 10, 14, 12, 4, 15);
+    R.rect(((90 - cl) % (W + 30) + (W + 30)) % (W + 30) - 10, 22, 16, 5, 15);
+    // Ground.
+    const gy = Math.floor(H * 0.68);
+    R.rect(0, gy, W, H - gy, 5);
+    R.rect(0, gy, W, 2, 11);
+    // Parallax bushes scrolling with rpm/direction.
+    const boff = ((st.scroll % 40) + 40) % 40;
+    for (let x = -40; x < W + 40; x += 40) {
+      const bx = Math.round(x - boff);
+      R.rect(bx, gy - 6, 8, 6, 11); R.rect(bx + 20, gy - 4, 5, 4, 11);
+    }
+    // Tractor in profile, sitting on the ground, bouncing on shake.
+    const cx = Math.round(W * 0.42);
+    const bnc = st.bounce > 0 ? Math.round(Math.sin(st.bounce * 50) * 2) : 0;
+    drawWheel(cx + 14, gy - 6 + bnc, 7);       // rear (big)
+    drawWheel(cx - 8, gy - 4 + bnc, 4);        // front (small)
+    R.rect(cx - 10, gy - 16 + bnc, 30, 10, 6); // hull
+    R.rect(cx - 2, gy - 24 + bnc, 12, 9, 6);   // cab
+    R.rect(cx + 1, gy - 22 + bnc, 7, 5, 13);   // window
+    R.rect(cx - 8, gy - 22 + bnc, 3, 6, 0);    // chimney
+    R.rect(cx + 3, gy - 28 + bnc, 4, 4, 12);   // driver head
+    if (st.headlights) R.rect(cx - 12, gy - 14 + bnc, 3, 3, 14);
+    // Chimney smoke rising.
+    for (const p of st.puffs) {
+      const c = p.life > 0.5 ? 10 : 7;
+      R.rect(cx - 8, gy - 26 + bnc - Math.round((1.2 - p.life) * 10), Math.round(p.r), Math.round(p.r), c);
+    }
+  }
 
   function draw() { st.view === 'side' ? drawSide() : drawTop(); }
 
